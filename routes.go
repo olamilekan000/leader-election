@@ -29,6 +29,10 @@ func Points(c *gin.Context) {
 		fmt.Println("err:", err)
 	}
 
+	if rVal == nil {
+		*rVal = "0"
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "ok",
 		"code":    200,

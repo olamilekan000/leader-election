@@ -13,15 +13,16 @@ import (
 )
 
 func main() {
+	var identifier string = os.Getenv("IDENTIFIER")
 
-	// Create a context for cancellation
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	rcl := NewRedisClient()
-	_, err := rcl.redisCL.Ping(ctx).Result()
+
+	_, err := rcl.Ping(ctx)
 	if err != nil {
-		fmt.Println("err: pingingngn----", err.Error())
+		log.Fatalln(err)
 	}
 
 	fmt.Println("Redis is ready. Starting the application.")
@@ -37,19 +38,21 @@ func main() {
 	}
 
 	go func() {
-		fmt.Printf("Starting server at %s", port)
+		fmt.Println("Starting server at " + port)
 
 		if err := srv.ListenAndServe(); err != nil {
-			fmt.Println(err)
-			log.Fatal(err)
+			log.Fatalln(err)
 		}
 	}()
+
+	go processData(ctx, identifier)
 
 	// Wait for termination signal
 	signalCh := make(chan os.Signal, 1)
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 	<-signalCh
 
-	// Cancel the context and exit
-	cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		rcl.redisCL.Shutdown(ctx)
+	}
 }
