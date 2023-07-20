@@ -13,7 +13,6 @@ spec:
       labels:
         app: l-po
     spec:
-      serviceAccountName: lease-sa
       initContainers:
         - name: wait-for-redis
           image: busybox:latest
