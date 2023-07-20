@@ -1,27 +1,59 @@
-apiVersion: v1
-kind: Service
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: redis-service
+  name: redis-deployment
   namespace: default
 spec:
+  replicas: 1
   selector:
-    app: redis
-  ports:
-  - protocol: TCP
-    port: 6379
-    targetPort: 6379
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:latest
+        resources: {}
+        ports:
+          - containerPort: 6379    
 
 ---
-apiVersion: v1
-kind: Service
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: lease-based-le-svc
+  name: l-po-deployment
   namespace: default
 spec:
+  replicas: 3
   selector:
-    app: l-po
-  type: NodePort
-  ports:
-  - protocol: TCP
-    port: 8888
-    targetPort: 8881
+    matchLabels:
+      app: l-po
+  template:
+    metadata:
+      labels:
+        app: l-po
+    spec:
+      initContainers:
+        - name: wait-for-redis
+          image: busybox:latest
+          command: ['sh', '-c', 'until nslookup redis-service.default.svc.cluster.local; do sleep 1; done'] 
+      containers:
+      - image: lease-based-le
+        name: l-po      
+        resources: {}
+        env:
+          - name: IDENTIFIER
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          - name: REDIS_HOST
+            value: redis-service
+          - name: REDIS_PORT
+            value: "6379"   
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8881  
