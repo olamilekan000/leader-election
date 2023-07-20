@@ -21,9 +21,7 @@ spec:
       containers:
       - image: lease-based-le
         name: l-po      
-        resources: {} 
-        args:
-          - --lease-name=lease-based-lease
+        resources: {}
         env:
           - name: IDENTIFIER
             valueFrom:
