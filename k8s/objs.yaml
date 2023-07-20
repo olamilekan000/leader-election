@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: l-po-deployment
+  namespace: default
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: l-po
+  template:
+    metadata:
+      labels:
+        app: l-po
+    spec:
+      serviceAccountName: lease-sa
+      initContainers:
+        - name: wait-for-redis
+          image: busybox:latest
+          command: ['sh', '-c', 'until nslookup redis-service.default.svc.cluster.local; do sleep 1; done'] 
+      containers:
+      - image: lease-based-le
+        name: l-po      
+        resources: {} 
+        args:
+          - --lease-name=lease-based-lease
+        env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          - name: REDIS_HOST
+            value: redis-service
+          - name: REDIS_PORT
+            value: "6379"   
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8881     
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lease-based-le-svc
+  namespace: default
+spec:
+  selector:
+    app: l-po
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 8888
+    targetPort: 8881
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: lease-sa
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: lease-role
+rules:
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["get", "create", "update", "patch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: lease-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: lease-role
+subjects:
+- kind: ServiceAccount
+  name: lease-sa
+  namespace: default

@@ -1,0 +1,27 @@
+apiVersion: skaffold/v4beta1
+kind: Config
+metadata:
+  name: lease-based
+build:
+  artifacts:
+  - image: lease-based-le
+    docker:
+      dockerfile: Dockerfile
+manifests:
+  rawYaml:
+  - k8s/*
+profiles:
+  - name: default
+
+portForward:
+  - resourceType: service
+    resourceName: redis-service
+    namespace: default
+    port: 6379
+    localPort: 6379
+
+  - resourceType: service
+    resourceName: lease-based-le-svc
+    namespace: default
+    port: 8888
+    localPort: 8888    
