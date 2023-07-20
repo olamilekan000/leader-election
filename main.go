@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,9 +21,13 @@ func main() {
 
 	rcl := NewRedisClient()
 
-	_, err := rcl.Ping(ctx)
-	if err != nil {
-		log.Fatalln(err)
+	for {
+		_, err := rcl.Ping(ctx)
+		if err == nil {
+			break
+		}
+
+		time.Sleep(3 * time.Second)
 	}
 
 	fmt.Println("Redis is ready. Starting the application.")

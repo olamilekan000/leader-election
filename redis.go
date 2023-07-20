@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"time"
@@ -70,19 +69,22 @@ func processData(ctx context.Context, processor string) {
 		rVal, err = rcl.Get(ctx, rKey)
 		if errors.Is(err, redis.Nil) {
 			if err := rcl.Set(ctx, rKey, "0"); err != nil {
-				log.Fatalln(err.Error())
+				fmt.Println(err.Error())
 			}
+
 			continue
 		}
 
 		if err != nil {
-			log.Fatalln("error fetching data from redis: ", err.Error())
+			fmt.Println("error fetching data from redis: ", err.Error())
+			continue
 		}
 
 		if rVal != nil {
 			num, err = strconv.Atoi(*rVal)
 			if err != nil {
 				fmt.Println("Error: convert", err)
+				continue
 			}
 		}
 
@@ -91,7 +93,8 @@ func processData(ctx context.Context, processor string) {
 
 		err := rcl.Set(ctx, rKey, strconv.Itoa(num))
 		if err != nil {
-			log.Fatalln("error persisting data: ", err.Error())
+			fmt.Println("error persisting data: ", err.Error())
+			continue
 		}
 	}
 }
