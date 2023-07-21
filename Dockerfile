@@ -3,7 +3,11 @@ FROM golang:1.20.2 as builder
 WORKDIR /app
 
 # copy modules manifests
-COPY . .
+COPY go.mod go.sum ./
+
+# Copy only the Go source files
+COPY *.go ./
+
 
 # build
 RUN go build -o lease-based-le
