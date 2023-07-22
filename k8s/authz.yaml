@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: lease-sa
+  namespace: default
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: lease-role
+rules:
+- apiGroups: ["coordination.k8s.io"] # "" indicates the core API group
+  resources: ["leases"]
+  verbs: ["get", "watch", "list", "create", "update", "patch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: lease-rolebinding
+  namespace: default
+subjects:
+- kind: ServiceAccount
+  name: lease-sa
+  namespace: default
+roleRef:
+  kind: Role
+  name: lease-role
+  apiGroup: rbac.authorization.k8s.io
