@@ -57,15 +57,11 @@ func main() {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		log.Fatal(err)
-
-		return
 	}
 
 	clienset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		log.Fatal(err)
-
-		return
 	}
 
 	lock, err := resourcelock.New(
@@ -80,8 +76,6 @@ func main() {
 	)
 	if err != nil {
 		log.Fatal(err)
-
-		return
 	}
 
 	lconf := leaderelection.LeaderElectionConfig{
@@ -111,8 +105,6 @@ func main() {
 	lElector, err := leaderelection.NewLeaderElector(lconf)
 	if err != nil {
 		log.Fatal(err)
-
-		return
 	}
 
 	lElector.Run(ctx)
